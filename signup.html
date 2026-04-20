@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Записаться — Togetherty</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--orange:#D4501A;--orange-light:#E8734A;--beige:#F5F0E8;--warm:#C4956A;--dark:#1A1410;--text:#2C2420;--muted:#8A7A6E;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:linear-gradient(135deg,#C4623A 0%,#8B3A1A 50%,#6B2A0E 100%);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;position:relative;overflow:hidden;}
+body::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 20% 30%,rgba(255,180,100,0.25) 0%,transparent 50%),radial-gradient(circle at 80% 70%,rgba(255,100,50,0.15) 0%,transparent 50%);}
+.orb{position:absolute;border-radius:50%;filter:blur(80px);pointer-events:none;}
+.orb1{width:600px;height:600px;background:rgba(255,160,80,0.2);top:-200px;right:-200px;animation:spin 20s linear infinite;}
+.orb2{width:400px;height:400px;background:rgba(255,80,20,0.15);bottom:-150px;left:-150px;animation:spin 15s linear infinite reverse;}
+@keyframes spin{0%{transform:rotate(0deg) scale(1)}50%{transform:rotate(180deg) scale(1.1)}100%{transform:rotate(360deg) scale(1)}}
+
+.card{
+  position:relative;z-index:1;width:100%;max-width:520px;
+  background:rgba(255,255,255,0.14);
+  backdrop-filter:blur(40px) saturate(180%);
+  -webkit-backdrop-filter:blur(40px) saturate(180%);
+  border:1px solid rgba(255,255,255,0.3);
+  border-radius:32px;
+  box-shadow:0 24px 80px rgba(0,0,0,0.25),inset 0 1px 0 rgba(255,255,255,0.35),inset 0 -1px 0 rgba(0,0,0,0.1);
+  overflow:hidden;
+}
+.card-header{padding:32px 36px 24px;border-bottom:1px solid rgba(255,255,255,0.15);}
+.brand{font-family:'Playfair Display',serif;font-size:20px;color:white;font-weight:700;margin-bottom:20px;display:flex;align-items:center;gap:8px;}
+.brand span{color:rgba(255,255,255,0.7);font-weight:400;}
+.progress-bar{height:4px;background:rgba(255,255,255,0.15);border-radius:100px;overflow:hidden;margin-bottom:12px;}
+.progress-fill{height:100%;background:linear-gradient(90deg,rgba(255,255,255,0.9),rgba(255,200,150,0.8));border-radius:100px;transition:width .4s cubic-bezier(.4,0,.2,1);}
+.step-info{display:flex;justify-content:space-between;align-items:center;}
+.step-label{font-size:12px;color:rgba(255,255,255,0.6);letter-spacing:.06em;text-transform:uppercase;}
+.step-dots{display:flex;gap:6px;}
+.dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.25);transition:all .3s;}
+.dot.done{background:rgba(255,255,255,0.9);}
+.dot.active{background:white;width:22px;border-radius:4px;}
+
+.card-body{padding:32px 36px;}
+.screen{display:none;animation:fadeUp .3s ease both;}
+.screen.active{display:block;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+
+.q-title{font-family:'Playfair Display',serif;font-size:26px;color:white;font-weight:700;margin-bottom:8px;line-height:1.3;}
+.q-sub{font-size:14px;color:rgba(255,255,255,0.6);margin-bottom:28px;line-height:1.5;}
+
+.inp{
+  width:100%;padding:14px 18px;border-radius:14px;margin-bottom:12px;
+  background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.25);
+  color:white;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;
+  transition:all .2s;backdrop-filter:blur(8px);
+}
+.inp::placeholder{color:rgba(255,255,255,0.4);}
+.inp:focus{border-color:rgba(255,255,255,0.5);background:rgba(255,255,255,0.18);}
+
+.age-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;}
+.choice-btn{
+  padding:14px;border-radius:14px;border:1px solid rgba(255,255,255,0.2);
+  background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.8);
+  font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;
+  cursor:pointer;transition:all .2s;text-align:center;
+  backdrop-filter:blur(8px);
+}
+.choice-btn:hover{background:rgba(255,255,255,0.18);border-color:rgba(255,255,255,0.4);}
+.choice-btn.sel{background:rgba(255,255,255,0.95);color:#D4501A;border-color:white;font-weight:700;box-shadow:0 4px 16px rgba(0,0,0,0.15);}
+
+.tags-wrap{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
+.tag{
+  padding:9px 16px;border-radius:100px;border:1px solid rgba(255,255,255,0.2);
+  background:rgba(255,255,255,0.08);font-size:13px;color:rgba(255,255,255,0.8);
+  cursor:pointer;transition:all .2s;backdrop-filter:blur(8px);user-select:none;
+}
+.tag:hover{background:rgba(255,255,255,0.18);}
+.tag.sel{background:rgba(255,255,255,0.9);color:#D4501A;border-color:white;font-weight:600;}
+.sel-count{font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:20px;}
+
+.type-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;}
+.type-card{
+  padding:18px 14px;border-radius:16px;border:1px solid rgba(255,255,255,0.2);
+  background:rgba(255,255,255,0.08);cursor:pointer;transition:all .2s;text-align:center;
+  backdrop-filter:blur(8px);
+}
+.type-card:hover{background:rgba(255,255,255,0.16);}
+.type-card.sel{background:rgba(255,255,255,0.9);border-color:white;box-shadow:0 4px 16px rgba(0,0,0,0.15);}
+.type-icon{font-size:26px;margin-bottom:8px;}
+.type-name{font-size:13px;font-weight:600;color:white;margin-bottom:3px;}
+.type-card.sel .type-name{color:#D4501A;}
+.type-desc{font-size:11px;color:rgba(255,255,255,0.5);line-height:1.4;}
+.type-card.sel .type-desc{color:#D4501A88;}
+
+.price-glass{
+  background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);
+  border-radius:20px;padding:22px;margin-bottom:20px;
+  backdrop-filter:blur(16px);
+}
+.price-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid rgba(255,255,255,0.1);font-size:14px;color:rgba(255,255,255,0.6);}
+.price-row:last-child{border-bottom:none;}
+.price-row .val{color:white;font-weight:500;}
+.price-total{display:flex;justify-content:space-between;align-items:center;padding-top:14px;border-top:1px solid rgba(255,255,255,0.2);margin-top:4px;}
+.price-total .lbl{font-size:15px;font-weight:600;color:white;}
+.price-total .amt{font-family:'Playfair Display',serif;font-size:28px;color:white;font-weight:700;}
+
+.info-box{display:flex;gap:10px;padding:14px;background:rgba(255,255,255,0.08);border-radius:14px;border:1px solid rgba(255,255,255,0.15);margin-bottom:20px;}
+.info-box-text{font-size:13px;color:rgba(255,255,255,0.6);line-height:1.6;}
+
+.card-footer{padding:0 36px 32px;display:flex;flex-direction:column;gap:10px;}
+.btn-next{
+  width:100%;padding:17px;border-radius:16px;border:none;
+  background:rgba(255,255,255,0.95);color:#D4501A;
+  font-family:'DM Sans',sans-serif;font-size:16px;font-weight:700;
+  cursor:pointer;transition:all .25s;
+  box-shadow:0 8px 24px rgba(0,0,0,0.2),inset 0 1px 0 white;
+}
+.btn-next:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(0,0,0,0.25);}
+.btn-next:disabled{opacity:.4;cursor:not-allowed;transform:none;}
+.btn-back{
+  width:100%;padding:14px;border-radius:16px;
+  background:transparent;border:1px solid rgba(255,255,255,0.2);
+  color:rgba(255,255,255,0.7);font-family:'DM Sans',sans-serif;font-size:15px;
+  cursor:pointer;transition:all .2s;
+}
+.btn-back:hover{background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.35);}
+
+/* SUCCESS */
+.success-wrap{text-align:center;padding:20px 0;}
+.success-icon{width:90px;height:90px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:40px;margin:0 auto 24px;background:rgba(255,255,255,0.15);border:2px solid rgba(255,255,255,0.3);box-shadow:0 8px 32px rgba(0,0,0,0.15);}
+.success-title{font-family:'Playfair Display',serif;font-size:28px;color:white;font-weight:700;margin-bottom:10px;}
+.success-sub{font-size:15px;color:rgba(255,255,255,0.7);line-height:1.7;margin-bottom:28px;}
+
+.timer-block{background:rgba(0,0,0,0.2);border:1px solid rgba(255,255,255,0.15);border-radius:20px;padding:24px;backdrop-filter:blur(16px);}
+.timer-lbl{font-size:11px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px;}
+.timer-digits{display:flex;gap:8px;justify-content:center;align-items:center;}
+.t-unit{display:flex;flex-direction:column;align-items:center;gap:4px;}
+.t-num{font-family:'Playfair Display',serif;font-size:30px;font-weight:700;color:white;background:rgba(255,255,255,0.1);border-radius:12px;padding:10px 16px;min-width:64px;text-align:center;border:1px solid rgba(255,255,255,0.2);}
+.t-lbl{font-size:10px;color:rgba(255,255,255,0.4);text-transform:uppercase;}
+.t-sep{font-size:24px;color:rgba(255,255,255,0.3);margin-top:-8px;}
+</style>
+</head>
+<body>
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+
+<div class="card">
+  <div class="card-header">
+    <div class="brand">Togetherty <span>· Рязань</span></div>
+    <div class="progress-bar"><div class="progress-fill" id="progress" style="width:25%"></div></div>
+    <div class="step-info">
+      <div class="step-label" id="step-lbl">Шаг 1 из 4</div>
+      <div class="step-dots">
+        <div class="dot active" id="dot1"></div>
+        <div class="dot" id="dot2"></div>
+        <div class="dot" id="dot3"></div>
+        <div class="dot" id="dot4"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card-body">
+    <!-- STEP 1 -->
+    <div class="screen active" id="s1">
+      <div class="q-title">Как тебя зовут?</div>
+      <div class="q-sub">Другим участникам будет видно только имя</div>
+      <input class="inp" id="inp-name" placeholder="Имя" type="text" autocomplete="given-name">
+      <div style="margin-top:4px;margin-bottom:4px;font-size:13px;color:rgba(255,255,255,0.5)">Возраст</div>
+      <div class="age-grid" style="margin-top:10px">
+        <button class="choice-btn" onclick="selAge(this,'18-24')">18–24</button>
+        <button class="choice-btn" onclick="selAge(this,'25-34')">25–34</button>
+        <button class="choice-btn" onclick="selAge(this,'35-44')">35–44</button>
+        <button class="choice-btn" onclick="selAge(this,'45+')">45+</button>
+      </div>
+    </div>
+
+    <!-- STEP 2 -->
+    <div class="screen" id="s2">
+      <div class="q-title">Что тебе интересно?</div>
+      <div class="q-sub">Выбери 3–6 тем для подбора компании</div>
+      <div class="tags-wrap" id="int-tags">
+        <div class="tag" data-v="кино" onclick="togInt(this)">🎬 Кино</div>
+        <div class="tag" data-v="музыка" onclick="togInt(this)">🎵 Музыка</div>
+        <div class="tag" data-v="путешествия" onclick="togInt(this)">✈️ Путешествия</div>
+        <div class="tag" data-v="технологии" onclick="togInt(this)">💻 Технологии</div>
+        <div class="tag" data-v="еда" onclick="togInt(this)">🍕 Еда</div>
+        <div class="tag" data-v="книги" onclick="togInt(this)">📚 Книги</div>
+        <div class="tag" data-v="спорт" onclick="togInt(this)">🏃 Спорт</div>
+        <div class="tag" data-v="искусство" onclick="togInt(this)">🎨 Искусство</div>
+        <div class="tag" data-v="природа" onclick="togInt(this)">🌿 Природа</div>
+        <div class="tag" data-v="игры" onclick="togInt(this)">🎮 Игры</div>
+        <div class="tag" data-v="бизнес" onclick="togInt(this)">💼 Бизнес</div>
+        <div class="tag" data-v="зож" onclick="togInt(this)">🧘 ЗОЖ</div>
+        <div class="tag" data-v="животные" onclick="togInt(this)">🐾 Животные</div>
+        <div class="tag" data-v="наука" onclick="togInt(this)">🔬 Наука</div>
+        <div class="tag" data-v="фото" onclick="togInt(this)">📷 Фото</div>
+        <div class="tag" data-v="кулинария" onclick="togInt(this)">👨‍🍳 Кулинария</div>
+      </div>
+      <div class="sel-count" id="int-count">Выбрано: 0 из 6</div>
+    </div>
+
+    <!-- STEP 3 -->
+    <div class="screen" id="s3">
+      <div class="q-title">Как ты в компании?</div>
+      <div class="q-sub">Поможет сформировать сбалансированную группу</div>
+      <div class="type-grid">
+        <div class="type-card" data-v="introvert" onclick="selType(this)">
+          <div class="type-icon">🌙</div>
+          <div class="type-name">Интроверт</div>
+          <div class="type-desc">Слушаю больше, чем говорю</div>
+        </div>
+        <div class="type-card" data-v="extrovert" onclick="selType(this)">
+          <div class="type-icon">☀️</div>
+          <div class="type-name">Экстраверт</div>
+          <div class="type-desc">Легко завожу разговор</div>
+        </div>
+        <div class="type-card" data-v="ambivert" onclick="selType(this)">
+          <div class="type-icon">⚖️</div>
+          <div class="type-name">Амбиверт</div>
+          <div class="type-desc">По настроению</div>
+        </div>
+        <div class="type-card" data-v="life_soul" onclick="selType(this)">
+          <div class="type-icon">🔥</div>
+          <div class="type-name">Душа компании</div>
+          <div class="type-desc">Всегда в центре событий</div>
+        </div>
+      </div>
+      <div style="font-size:13px;color:rgba(255,255,255,0.6);margin-bottom:10px;font-weight:500;">Цель визита</div>
+      <div class="tags-wrap" id="goal-tags">
+        <div class="tag" data-v="friends" onclick="selGoal(this)">👥 Новые друзья</div>
+        <div class="tag" data-v="networking" onclick="selGoal(this)">💼 Нетворкинг</div>
+        <div class="tag" data-v="fun" onclick="selGoal(this)">🎉 Просто провести вечер</div>
+      </div>
+    </div>
+
+    <!-- STEP 4 -->
+    <div class="screen" id="s4">
+      <div class="q-title">Подтверди участие</div>
+      <div class="q-sub">Всё готово — остался один шаг</div>
+      <div class="price-glass">
+        <div class="price-row"><span>Ужин</span><span class="val" id="pay-date">Среда</span></div>
+        <div class="price-row"><span>Время</span><span class="val">19:30</span></div>
+        <div class="price-row"><span>Участников за столом</span><span class="val">6 человек</span></div>
+        <div class="price-row"><span>Еда и напитки</span><span class="val">Оплачивается отдельно</span></div>
+        <div class="price-total"><span class="lbl">Оргсбор</span><span class="amt">500 ₽</span></div>
+      </div>
+      <div class="info-box">
+        <span style="font-size:18px;">ℹ️</span>
+        <div class="info-box-text">За 24 часа получишь адрес ресторана и состав группы. Отмена возможна не позднее чем за 24 часа.</div>
+      </div>
+    </div>
+
+    <!-- SUCCESS -->
+    <div class="screen" id="s-success">
+      <div class="success-wrap">
+        <div class="success-icon">🎉</div>
+        <div class="success-title">Ты в игре!</div>
+        <div class="success-sub">Алгоритм подбирает компанию. За 24 часа до ужина пришлём адрес ресторана и список участников в Telegram.</div>
+        <div class="timer-block">
+          <div class="timer-lbl">До ужина</div>
+          <div class="timer-digits">
+            <div class="t-unit"><div class="t-num" id="td">02</div><div class="t-lbl">дней</div></div>
+            <div class="t-sep">:</div>
+            <div class="t-unit"><div class="t-num" id="th">14</div><div class="t-lbl">часов</div></div>
+            <div class="t-sep">:</div>
+            <div class="t-unit"><div class="t-num" id="tm">37</div><div class="t-lbl">минут</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card-footer">
+    <button class="btn-next" id="btn-next" onclick="nextStep()">Дальше →</button>
+    <button class="btn-back" id="btn-back" style="display:none" onclick="prevStep()">← Назад</button>
+  </div>
+</div>
+
+<script>
+const state = {name:'',age_range:'',interests:[],temperament:'',goal:''};
+let step = 1;
+
+const steps = ['s1','s2','s3','s4'];
+const progresses = [25,50,75,100];
+const labels = ['Шаг 1 из 4','Шаг 2 из 4','Шаг 3 из 4','Шаг 4 из 4'];
+
+function showStep(n) {
+  steps.forEach((id,i) => {
+    document.getElementById(id).classList.toggle('active', i === n-1);
+    const dot = document.getElementById('dot'+(i+1));
+    dot.classList.remove('active','done');
+    if(i+1 === n) dot.classList.add('active');
+    else if(i+1 < n) dot.classList.add('done');
+  });
+  document.getElementById('progress').style.width = progresses[n-1]+'%';
+  document.getElementById('step-lbl').textContent = labels[n-1];
+  document.getElementById('btn-back').style.display = n > 1 ? 'block' : 'none';
+  const btn = document.getElementById('btn-next');
+  btn.textContent = n === 4 ? 'Оплатить 500 ₽' : 'Дальше →';
+  btn.disabled = false;
+}
+
+function nextStep() {
+  if(step === 1) {
+    const name = document.getElementById('inp-name').value.trim();
+    if(!name || !state.age_range) { document.getElementById('inp-name').focus(); return; }
+    state.name = name;
+  }
+  if(step === 2 && state.interests.length < 3) return;
+  if(step === 3 && (!state.temperament || !state.goal)) return;
+  if(step === 4) { submit(); return; }
+  step++;
+  showStep(step);
+}
+
+function prevStep() { if(step > 1) { step--; showStep(step); } }
+
+function selAge(el,v) {
+  document.querySelectorAll('.age-grid .choice-btn').forEach(b=>b.classList.remove('sel'));
+  el.classList.add('sel'); state.age_range = v;
+}
+
+function togInt(el) {
+  const v = el.dataset.v;
+  if(el.classList.contains('sel')) {
+    el.classList.remove('sel');
+    state.interests = state.interests.filter(x=>x!==v);
+  } else {
+    if(state.interests.length >= 6) return;
+    el.classList.add('sel'); state.interests.push(v);
+  }
+  document.getElementById('int-count').textContent = 'Выбрано: '+state.interests.length+' из 6';
+  document.getElementById('btn-next').disabled = state.interests.length < 3;
+}
+
+function selType(el) {
+  document.querySelectorAll('.type-card').forEach(c=>c.classList.remove('sel'));
+  el.classList.add('sel'); state.temperament = el.dataset.v; checkS3();
+}
+function selGoal(el) {
+  document.querySelectorAll('#goal-tags .tag').forEach(t=>t.classList.remove('sel'));
+  el.classList.add('sel'); state.goal = el.dataset.v; checkS3();
+}
+function checkS3() { document.getElementById('btn-next').disabled = !state.temperament || !state.goal; }
+
+function getNextWed() {
+  const d = new Date(); const day = d.getDay();
+  const diff = (3-day+7)%7||7; d.setDate(d.getDate()+diff); return d;
+}
+
+function submit() {
+  // Сохраняем в localStorage для демо
+  localStorage.setItem('tg_user', JSON.stringify(state));
+  // В реальности: POST на сервер
+  const btn = document.getElementById('btn-next');
+  btn.textContent = 'Обработка...'; btn.disabled = true;
+  setTimeout(() => {
+    steps.forEach(id => document.getElementById(id).classList.remove('active'));
+    document.getElementById('s-success').classList.add('active');
+    document.getElementById('btn-next').style.display = 'none';
+    document.getElementById('btn-back').style.display = 'none';
+    document.getElementById('progress').style.width = '100%';
+    document.getElementById('step-lbl').textContent = 'Готово!';
+    startTimer();
+  }, 1200);
+}
+
+function startTimer() {
+  function tick() {
+    const wed = getNextWed(); wed.setHours(19,30,0,0);
+    const diff = wed - new Date();
+    if(diff <= 0) return;
+    document.getElementById('td').textContent = String(Math.floor(diff/86400000)).padStart(2,'0');
+    document.getElementById('th').textContent = String(Math.floor((diff%86400000)/3600000)).padStart(2,'0');
+    document.getElementById('tm').textContent = String(Math.floor((diff%3600000)/60000)).padStart(2,'0');
+  }
+  tick(); setInterval(tick, 30000);
+}
+
+const wed = getNextWed();
+const M = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+document.getElementById('pay-date').textContent = `Среда, ${wed.getDate()} ${M[wed.getMonth()]}`;
+showStep(1);
+</script>
+<script>
+function goToSuccess() {
+  // тут показываешь success экран (если уже есть логика — оставь свою)
+  
+  setTimeout(() => {
+    window.location.href = "index.html";
+  }, 3000);
+}
+</script>
+</body>
+</html>
