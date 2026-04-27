@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Togetherty</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600;1,700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--o:#F4622A;--ol:#FF7A45;--od:#C84A18;--og:rgba(244,98,42,.35);--od2:rgba(244,98,42,.15);--om:rgba(244,98,42,.25);--bg:#0A0704;--g:rgba(255,255,255,.07);--g2:rgba(255,255,255,.12);--gb:rgba(255,255,255,.14);--gb2:rgba(255,255,255,.24);--t:#F8EDE5;--m:rgba(248,237,229,.55);--m2:rgba(248,237,229,.3);--green:#4CD97A;--amber:#F0B840;--red:#F05050;--nav:62px;}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t);}
+.amb{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;}
+.orb{position:absolute;border-radius:50%;filter:blur(90px);animation:of 14s ease-in-out infinite;}
+.o1{width:380px;height:380px;background:rgba(244,98,42,.18);top:-100px;right:-80px;}
+.o2{width:260px;height:260px;background:rgba(255,140,60,.12);bottom:-60px;left:-60px;animation-delay:-6s;}
+@keyframes of{0%,100%{transform:translateY(0)}50%{transform:translateY(-24px)}}
+.app{position:relative;z-index:1;height:100svh;display:flex;flex-direction:column;}
+.pages{flex:1;position:relative;overflow:hidden;}
+.page{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;display:none;flex-direction:column;padding-bottom:calc(var(--nav)+8px);scrollbar-width:none;}
+.page::-webkit-scrollbar{display:none;}
+.page.active{display:flex;animation:pi .22s ease;}
+@keyframes pi{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.nav{height:var(--nav);flex-shrink:0;display:flex;align-items:center;padding:0 4px;background:rgba(10,7,4,.92);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);border-top:1px solid rgba(244,98,42,.2);position:relative;z-index:50;}
+.ni-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px;cursor:pointer;border:none;background:none;transition:all .2s;border-radius:14px;}
+.ni-ic{font-size:26px;line-height:1;opacity:.45;}
+.ni-lbl{font-size:11px;font-weight:600;color:rgba(248,237,229,.4);letter-spacing:.01em;transition:color .2s;}
+.ni-btn.active .ni-lbl{color:var(--o);}
+.ni-btn.active .ni-ic{transform:scale(1.15);opacity:1;}
+.ni-dot{width:4px;height:4px;border-radius:50%;background:var(--o);margin-top:0;opacity:0;transition:opacity .2s;box-shadow:0 0 6px var(--og);}
+.ni-btn.active .ni-ic svg circle, .ni-btn.active .ni-ic svg path { fill: var(--o); stroke: var(--o); }
+.ni-btn.active .ni-ic svg path[fill="none"]{ fill: none; }
+.gl{background:var(--g2);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid var(--gb2);box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 4px 24px rgba(0,0,0,.2);}
+.gl-o{background:var(--od2);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--om);box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 4px 20px var(--og);}
+.btn{display:flex;align-items:center;justify-content:center;padding:15px 24px;border-radius:16px;border:none;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:all .22s;width:100%;}
+.btn-o{background:linear-gradient(135deg,var(--o),var(--ol));color:#fff;box-shadow:0 6px 24px var(--og),inset 0 1px 0 rgba(255,255,255,.2);}
+.btn-o:active{transform:scale(.97);}
+.btn-g{background:var(--g);color:var(--m);border:1px solid var(--gb);}
+.inp{width:100%;padding:14px 18px;border-radius:14px;margin-bottom:10px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);backdrop-filter:blur(12px);color:var(--t);font-family:'DM Sans',sans-serif;font-size:15px;outline:none;transition:all .2s;-webkit-appearance:none;}
+.inp::placeholder{color:rgba(255,255,255,.28);}
+.inp:focus{border-color:rgba(244,98,42,.5);background:rgba(255,255,255,.1);box-shadow:0 0 0 3px rgba(244,98,42,.12);}
+textarea.inp{resize:none;line-height:1.6;min-height:90px;}
+.chs{display:flex;flex-direction:column;gap:9px;margin-bottom:16px;}
+.ch{padding:13px 16px;border-radius:14px;text-align:left;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.11);backdrop-filter:blur(12px);color:var(--m);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:all .18s;}
+.ch.sel{background:rgba(244,98,42,.2);border-color:rgba(244,98,42,.45);color:var(--t);font-weight:600;}
+.tgs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;}
+.tg{padding:8px 14px;border-radius:100px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);font-size:13px;color:var(--m);cursor:pointer;transition:all .18s;user-select:none;}
+.tg.sel{background:rgba(244,98,42,.22);border-color:rgba(244,98,42,.5);color:var(--t);font-weight:600;}
+.tg-hint{font-size:11px;color:var(--m2);margin-bottom:16px;}
+/* QUIZ */
+.q-hdr{padding:16px 20px 0;display:flex;align-items:center;justify-content:space-between;}
+.q-brand{font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:700;color:var(--o);}
+.q-sl{font-size:12px;color:var(--m2);}
+.q-prog{margin:10px 20px 0;height:3px;background:rgba(255,255,255,.08);border-radius:100px;overflow:hidden;}
+.q-pf{height:100%;background:linear-gradient(90deg,var(--o),var(--ol));border-radius:100px;transition:width .4s cubic-bezier(.4,0,.2,1);box-shadow:0 0 8px var(--og);}
+.q-body{flex:1;padding:20px;overflow-y:auto;scrollbar-width:none;}
+.q-body::-webkit-scrollbar{display:none;}
+.q-title{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:700;line-height:1.35;margin-bottom:6px;}
+.q-sub{font-size:13px;color:var(--m);margin-bottom:20px;line-height:1.55;}
+.q-foot{padding:12px 20px 16px;display:flex;flex-direction:column;gap:9px;border-top:1px solid rgba(255,255,255,.06);background:rgba(10,7,4,.5);backdrop-filter:blur(20px);}
+/* ANSWERS */
+.ans-hdr{padding:20px 20px 0;}
+.ans-title{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:700;margin-bottom:0;}
+.ans-sub{font-size:13px;color:var(--m);}
+.ans-list{padding:0 20px;display:flex;flex-direction:column;gap:10px;margin-bottom:20px;}
+.ans-item{padding:14px 16px;border-radius:16px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);}
+.ans-q{font-size:11px;color:var(--o);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;}
+.ans-row{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;}
+.ans-val{font-size:14px;color:var(--t);line-height:1.5;flex:1;word-break:break-word;}
+.ans-edit{padding:5px 12px;border-radius:8px;border:1px solid rgba(244,98,42,.3);background:rgba(244,98,42,.1);color:var(--o);font-size:12px;font-weight:600;cursor:pointer;transition:all .18s;white-space:nowrap;flex-shrink:0;font-family:'DM Sans',sans-serif;}
+/* DINNER */
+.st-hero{margin:16px;padding:22px;border-radius:22px;position:relative;overflow:hidden;}
+.st-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 80% 20%,rgba(244,98,42,.3) 0%,transparent 60%);}
+.st-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:100px;margin-bottom:12px;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;position:relative;}
+.st-badge.pending{background:rgba(240,176,64,.15);color:var(--amber);border:1px solid rgba(240,176,64,.25);}
+.st-badge.approved{background:rgba(76,217,122,.15);color:var(--green);border:1px solid rgba(76,217,122,.25);}
+.st-badge.registered{background:rgba(244,98,42,.2);color:var(--ol);border:1px solid rgba(244,98,42,.35);}
+.st-badge.rejected{background:rgba(240,80,80,.15);color:var(--red);border:1px solid rgba(240,80,80,.2);}
+.st-pulse{width:7px;height:7px;border-radius:50%;animation:pulse 2s infinite;}
+.st-badge.pending .st-pulse{background:var(--amber);}
+.st-badge.approved .st-pulse{background:var(--green);}
+.st-badge.registered .st-pulse{background:var(--ol);}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.st-title{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:700;line-height:1.25;margin-bottom:6px;position:relative;}
+.st-sub{font-size:13px;color:var(--m);line-height:1.6;position:relative;}
+.sec-hd{font-size:10px;color:var(--m2);text-transform:uppercase;letter-spacing:.08em;font-weight:600;padding:0 20px;margin:14px 0 8px;}
+.info-card{margin:0 16px 12px;border-radius:16px;overflow:hidden;}
+.ir{display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.05);background:rgba(255,255,255,.05);backdrop-filter:blur(14px);}
+.ir:last-child{border-bottom:none;}
+.ir-ic{font-size:17px;width:22px;text-align:center;flex-shrink:0;}
+.ir-lb{font-size:12px;color:var(--m);flex:1;}
+.ir-vl{font-size:13px;font-weight:600;text-align:right;max-width:55%;}
+.timer-card{margin:0 16px 12px;padding:18px;border-radius:18px;text-align:center;}
+.t-lbl{font-size:10px;color:var(--m2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px;}
+.t-row{display:flex;justify-content:center;align-items:center;gap:6px;}
+.tu{display:flex;flex-direction:column;align-items:center;gap:3px;}
+.tn{font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:700;color:var(--t);background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:7px 12px;min-width:56px;text-align:center;}
+.tl{font-size:9px;color:var(--m2);text-transform:uppercase;letter-spacing:.06em;}
+.tsep{font-size:20px;color:rgba(255,255,255,.2);margin-top:-10px;}
+/* QUESTIONS FULLSCREEN */
+.qs-ov{position:fixed;inset:0;z-index:200;display:none;flex-direction:column;background:radial-gradient(ellipse at 70% 30%,#3A1808 0%,#0A0704 70%);}
+.qs-ov.open{display:flex;animation:pi .25s ease;}
+.qs-top{padding:16px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.qs-brand{font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--o);font-weight:700;}
+.qs-close{width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;color:var(--t);}
+.qs-wrap{flex:1;display:flex;align-items:center;justify-content:center;padding:0 20px;overflow:hidden;}
+.qs-card{width:100%;max-width:400px;border-radius:28px;padding:30px 26px;position:relative;overflow:hidden;background:rgba(255,255,255,.08);backdrop-filter:blur(32px);-webkit-backdrop-filter:blur(32px);border:1px solid rgba(255,255,255,.18);box-shadow:0 24px 80px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.15);cursor:pointer;}
+.qs-card::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 80% 20%,rgba(244,98,42,.2) 0%,transparent 60%);}
+.qs-num{font-family:'Cormorant Garamond',serif;font-size:72px;font-weight:700;color:rgba(244,98,42,.13);line-height:1;position:absolute;right:18px;bottom:14px;}
+.qs-cat{font-size:11px;font-weight:700;color:var(--o);letter-spacing:.1em;text-transform:uppercase;margin-bottom:14px;position:relative;}
+.qs-q{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:700;line-height:1.4;color:var(--t);margin-bottom:18px;position:relative;}
+.qs-hint{font-size:12px;color:var(--m2);position:relative;}
+.qs-dots{display:flex;gap:5px;justify-content:center;padding:14px 20px;flex-wrap:wrap;flex-shrink:0;}
+.qs-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.2);cursor:pointer;transition:all .2s;}
+.qs-dot.active{background:var(--o);width:18px;border-radius:3px;}
+.qs-btns{padding:0 20px 20px;display:flex;gap:10px;flex-shrink:0;}
+/* Q list */
+.cat-scroll{display:flex;gap:8px;padding:6px 20px 14px;margin-top:2px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
+.cat-scroll::-webkit-scrollbar{display:none;}
+.cat-pill{padding:6px 14px;border-radius:100px;white-space:nowrap;font-size:12px;font-weight:500;cursor:pointer;flex-shrink:0;transition:all .18s;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:var(--m);}
+.cat-pill.active{background:rgba(244,98,42,.2);border-color:rgba(244,98,42,.4);color:var(--t);font-weight:600;}
+.q-list{padding:0 20px;display:flex;flex-direction:column;gap:8px;margin-bottom:20px;}
+.ql-item{padding:14px 16px;border-radius:14px;cursor:pointer;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);transition:all .2s;}
+.ql-item:active{background:rgba(244,98,42,.12);border-color:rgba(244,98,42,.3);}
+.ql-cat{font-size:10px;color:var(--o);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;}
+.ql-text{font-size:14px;color:var(--t);line-height:1.5;}
+/* PROFILE */
+.prof-hero{margin:16px;padding:22px;border-radius:22px;position:relative;}
+.prof-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 20% 80%,rgba(244,98,42,.25) 0%,transparent 55%);}
+.prof-av{width:68px;height:68px;border-radius:50%;background:linear-gradient(135deg,var(--o),var(--ol));display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700;color:#fff;flex-shrink:0;border:2px solid rgba(244,98,42,.4);box-shadow:0 0 24px var(--og);overflow:hidden;}
+.prof-av img{width:100%;height:100%;object-fit:cover;}
+.p-links{padding:0 16px;display:flex;flex-direction:column;gap:8px;margin-bottom:20px;}
+.p-link{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);cursor:pointer;transition:all .2s;text-decoration:none;color:var(--t);}
+.p-link:active{background:rgba(255,255,255,.1);}
+.p-link-ic{font-size:20px;flex-shrink:0;}
+.p-link-t{flex:1;}
+.p-link-name{font-size:14px;font-weight:600;}
+.p-link-sub{font-size:11px;color:var(--m);margin-top:1px;}
+/* SUCCESS */
+.suc-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 24px;}
+.suc-icon{width:88px;height:88px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:38px;margin-bottom:22px;background:rgba(244,98,42,.15);border:2px solid rgba(244,98,42,.3);}
+#toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(100px);opacity:0;background:rgba(20,20,20,.72);color:rgba(255,255,255,.9);padding:10px 18px;border-radius:100px;font-size:13px;font-weight:500;z-index:999;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.15);transition:transform .35s cubic-bezier(.34,1.56,.64,1),opacity .35s ease;white-space:nowrap;pointer-events:none;}
+#toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
+</style>
+</head>
+<body>
+<div class="amb"><div class="orb o1"></div><div class="orb o2"></div></div>
+
+<!-- FULLSCREEN QUESTIONS OVERLAY -->
+<div class="qs-ov" id="qs-ov">
+  <div class="qs-top">
+    <div class="qs-brand">Togetherty · Вопросы</div>
+    <div class="qs-close" onclick="closeQs()">✕</div>
+  </div>
+  <div class="qs-wrap">
+    <div class="qs-card" onclick="nextQs()">
+      <div class="qs-num" id="qs-num">01</div>
+      <div class="qs-cat" id="qs-cat">Знакомство</div>
+      <div class="qs-q" id="qs-q">Какое место в мире ты мечтаешь посетить?</div>
+      <div class="qs-hint">👆 Нажми — следующий вопрос</div>
+    </div>
+  </div>
+  <div class="qs-dots" id="qs-dots"></div>
+  <div class="qs-btns">
+    <button class="btn btn-g" onclick="prevQs()" style="flex:1;font-size:14px">← Назад</button>
+    <button class="btn btn-o" onclick="nextQs()" style="flex:2">Следующий →</button>
+  </div>
+</div>
+
+<div class="app">
+  <div class="pages">
+
+    <!-- TAB 1: АНКЕТА -->
+    <div class="page active" id="tab-anketa">
+      <div id="quiz-wrap">
+        <div class="q-hdr">
+          <div class="q-brand">Togetherty</div>
+          <div class="q-sl" id="q-sl">1 / 15</div>
+        </div>
+        <div class="q-prog"><div class="q-pf" id="q-pf" style="width:6.6%"></div></div>
+        <div class="q-body" id="q-body"></div>
+        <div class="q-foot">
+          <button class="btn btn-o" id="q-nxt">Дальше →</button>
+          <button class="btn btn-g" id="q-bk" style="display:none">← Назад</button>
+        </div>
+      </div>
+      <div id="ans-wrap" style="display:none">
+        <div class="ans-hdr">
+          <div class="ans-title">Моя анкета</div>
+          <div class="ans-sub" style="margin-top:6px;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid rgba(255,255,255,.06)">Нажми ✎ чтобы изменить любой ответ</div>
+        </div>
+        <div class="ans-list" id="ans-list"></div>
+        <div style="padding:0 20px 20px">
+          <button class="btn btn-g" onclick="startFresh()" style="font-size:13px">🔄 Пройти заново</button>
+        </div>
+      </div>
+      <div id="suc-wrap" style="display:none">
+        <div class="suc-wrap">
+          <div class="suc-icon">🎉</div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:700;margin-bottom:10px">Анкета отправлена!</div>
+          <div style="font-size:14px;color:var(--m);line-height:1.7;margin-bottom:28px">Модератор проверит в течение 1–2 часов.<br>Первый ужин — <strong style="color:var(--ol)">бесплатно</strong> ✨</div>
+          <button class="btn btn-o" onclick="goTab('tab-uzhin')">Посмотреть статус →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: УЖИН -->
+    <div class="page" id="tab-uzhin">
+      <div id="uzhin-empty" style="display:none;flex:1;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 28px">
+        <div style="font-size:52px;margin-bottom:16px;opacity:.6">🍽</div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;margin-bottom:8px">Ещё не записан</div>
+        <div style="font-size:13px;color:var(--m);line-height:1.6;margin-bottom:24px">Заполни анкету и дождись одобрения</div>
+        <button class="btn btn-o" onclick="goTab('tab-anketa')">Заполнить анкету →</button>
+      </div>
+      <div id="uzhin-main">
+        <div class="st-hero gl-o">
+          <div class="st-badge" id="st-badge"><div class="st-pulse"></div><span id="st-txt">На проверке</span></div>
+          <div class="st-title" id="st-title">Анкета отправлена</div>
+          <div class="st-sub" id="st-sub">Модератор проверит в течение 1–2 часов</div>
+        </div>
+        <div class="timer-card gl">
+          <div class="t-lbl">До ближайшего ужина</div>
+          <div class="t-row">
+            <div class="tu"><div class="tn" id="td">02</div><div class="tl">дней</div></div>
+            <div class="tsep">:</div>
+            <div class="tu"><div class="tn" id="th">14</div><div class="tl">часов</div></div>
+            <div class="tsep">:</div>
+            <div class="tu"><div class="tn" id="tm">37</div><div class="tl">мин</div></div>
+          </div>
+        </div>
+        <div class="sec-hd">Детали ужина</div>
+        <div class="info-card gl">
+          <div class="ir"><span class="ir-ic">📅</span><span class="ir-lb">Дата</span><span class="ir-vl" id="ir-date">Среда</span></div>
+          <div class="ir"><span class="ir-ic">🕢</span><span class="ir-lb">Время</span><span class="ir-vl">19:30</span></div>
+          <div class="ir"><span class="ir-ic">📍</span><span class="ir-lb">Ресторан</span><span class="ir-vl" style="color:var(--m);font-size:12px">Пришлём за 24 часа</span></div>
+          <div class="ir"><span class="ir-ic">👥</span><span class="ir-lb">Участников</span><span class="ir-vl">6 человек</span></div>
+          <div class="ir"><span class="ir-ic">💰</span><span class="ir-lb">Оргсбор</span><span class="ir-vl" id="ir-price" style="color:var(--ol)">Бесплатно 🎁</span></div>
+        </div>
+        <div id="reg-wrap" style="padding:0 16px 10px">
+          <button class="btn btn-o" onclick="registerDinner()">🍽 Записаться на ужин</button>
+        </div>
+        <div style="padding:0 16px 20px">
+          <button class="btn btn-g" onclick="goTab('tab-anketa')" style="font-size:13px">✏️ Изменить анкету</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: ВОПРОСЫ -->
+    <div class="page" id="tab-voprosy">
+      <div style="padding:16px 20px 8px">
+        <div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:700;margin-bottom:4px">Вопросы для ужина</div>
+        <div style="font-size:13px;color:var(--m)">Карточки помогут разговору за столом</div>
+      </div>
+      <div style="margin:8px 16px 12px;padding:22px;border-radius:22px;position:relative;overflow:hidden;cursor:pointer;min-height:150px" class="gl-o" onclick="openQs(0)" id="fq-preview">
+        <div style="position:absolute;right:16px;bottom:12px;font-family:'Cormorant Garamond',serif;font-size:64px;font-weight:700;color:rgba(244,98,42,.12);line-height:1" id="fq-num">01</div>
+        <div style="font-size:10px;font-weight:700;color:var(--o);letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px;position:relative" id="fq-cat">Знакомство</div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:700;line-height:1.4;color:var(--t);margin-bottom:10px;position:relative" id="fq-q">Какое место в мире ты мечтаешь посетить и почему ещё не был там?</div>
+        <div style="font-size:12px;color:var(--m2);position:relative">👆 Нажми — открыть все карточки</div>
+      </div>
+      <div style="padding:12px 20px 0">
+        <div class="cat-scroll" id="cat-scroll" style="padding:0 0 12px;margin:0">
+          <div class="cat-pill active" onclick="filterCat('all',this)">Все</div>
+          <div class="cat-pill" onclick="filterCat('Знакомство',this)">Знакомство</div>
+          <div class="cat-pill" onclick="filterCat('Мечты',this)">Мечты</div>
+          <div class="cat-pill" onclick="filterCat('Жизнь',this)">Жизнь</div>
+          <div class="cat-pill" onclick="filterCat('Юмор',this)">Юмор</div>
+          <div class="cat-pill" onclick="filterCat('Глубокое',this)">Глубокое</div>
+        </div>
+      </div>
+      <div class="q-list" id="q-list"></div>
+    </div>
+
+    <!-- TAB 4: ПРОФИЛЬ -->
+    <div class="page" id="tab-profil">
+      <div class="prof-hero gl-o">
+        <div style="display:flex;align-items:center;gap:16px;position:relative;margin-bottom:16px">
+          <div class="prof-av" id="p-av"><span id="p-av-l">?</span></div>
+          <div>
+            <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;line-height:1.2" id="p-name">Гость</div>
+            <div style="font-size:13px;color:var(--o);margin-top:2px" id="p-uname">@—</div>
+            <div style="margin-top:8px">
+              <div class="st-badge pending" id="p-badge" style="font-size:10px"><span id="p-badge-txt">📋 Нет анкеты</span></div>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;position:relative">
+          <div style="flex:1;text-align:center;padding:12px 6px;border-radius:12px;background:rgba(255,255,255,.07);min-width:0">
+            <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;line-height:1" id="p-s-uzhin">0</div>
+            <div style="font-size:10px;color:var(--m);margin-top:4px;white-space:nowrap">ужинов</div>
+          </div>
+          <div style="flex:1;text-align:center;padding:12px 6px;border-radius:12px;background:rgba(255,255,255,.07);min-width:0">
+            <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;line-height:1" id="p-s-int">0</div>
+            <div style="font-size:10px;color:var(--m);margin-top:4px;white-space:nowrap">интересов</div>
+          </div>
+          <div style="flex:1;text-align:center;padding:12px 6px;border-radius:12px;background:rgba(255,255,255,.07);min-width:0">
+            <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:700;line-height:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 2px" id="p-s-city">—</div>
+            <div style="font-size:10px;color:var(--m);margin-top:4px;white-space:nowrap">локация</div>
+          </div>
+        </div>
+      </div>
+      <div class="sec-hd">Интересы</div>
+      <div style="padding:0 16px 12px"><div class="tgs" id="p-int" style="pointer-events:none"><span style="font-size:13px;color:var(--m)">Не заполнено</span></div></div>
+      <div class="sec-hd">Действия</div>
+      <div class="p-links">
+        <div class="p-link" onclick="goTab('tab-anketa')">
+          <span class="p-link-ic">✏️</span>
+          <div class="p-link-t"><div class="p-link-name">Редактировать анкету</div><div class="p-link-sub">Изменить ответы на вопросы</div></div>
+          <span style="color:var(--m2)">›</span>
+        </div>
+        <a href="https://t.me/togetherty_support" class="p-link">
+          <span class="p-link-ic">💬</span>
+          <div class="p-link-t"><div class="p-link-name">Поддержка</div><div class="p-link-sub">@togetherty_support</div></div>
+          <span style="color:var(--m2)">›</span>
+        </a>
+        <a href="https://t.me/togetherty" class="p-link">
+          <span class="p-link-ic">📣</span>
+          <div class="p-link-t"><div class="p-link-name">Канал @togetherty</div><div class="p-link-sub">Анонсы ужинов</div></div>
+          <span style="color:var(--m2)">›</span>
+        </a>
+        <a href="https://togetherty.ru" class="p-link">
+          <span class="p-link-ic">🌐</span>
+          <div class="p-link-t"><div class="p-link-name">Сайт togetherty.ru</div><div class="p-link-sub">Подробнее о проекте</div></div>
+          <span style="color:var(--m2)">›</span>
+        </a>
+      </div>
+    </div>
+
+  </div>
+
+  <nav class="nav">
+    <button class="ni-btn active" id="nav-anketa" onclick="goTab('tab-anketa')"><span class="ni-ic">📋</span><span class="ni-lbl">Анкета</span><div class="ni-dot"></div></button>
+    <button class="ni-btn" id="nav-uzhin" onclick="goTab('tab-uzhin')"><span class="ni-ic">🍽️</span><span class="ni-lbl">Ужин</span><div class="ni-dot"></div></button>
+    <button class="ni-btn" id="nav-voprosy" onclick="goTab('tab-voprosy')"><span class="ni-ic">💬</span><span class="ni-lbl">Вопросы</span><div class="ni-dot"></div></button>
+    <button class="ni-btn" id="nav-profil" onclick="goTab('tab-profil')">
+      <span class="ni-ic">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="12" cy="8" r="4" fill="rgba(248,237,229,0.5)"/>
+          <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="rgba(248,237,229,0.5)" stroke-width="2" stroke-linecap="round" fill="none"/>
+        </svg>
+      </span>
+      <span class="ni-lbl">Профиль</span><div class="ni-dot"></div>
+    </button>
+  </nav>
+</div>
+<div id="toast"></div>
+
+<script>
+const tg=window.Telegram?.WebApp;
+if(tg){tg.expand();tg.setHeaderColor?.('#0A0704');tg.setBackgroundColor?.('#0A0704');}
+const tgU=tg?.initDataUnsafe?.user||{};
+
+const QS=[
+  {k:'q1',t:'text',  ti:'Как тебя зовут?',           sb:'Другим участникам видно только имя',pl:'Имя'},
+  {k:'q2',t:'choice',ti:'Сколько тебе лет?',          sb:'Возраст помогает подобрать группу', opts:['18–24','25–34','35–44','45+']},
+  {k:'q3',t:'text',  ti:'Откуда ты?',                 sb:'Район Рязани или другой город',     pl:'Например: Московский район'},
+  {k:'q4',t:'text',  ti:'Кем работаешь?',              sb:'Профессия, учёба или бизнес',       pl:'Сфера или должность'},
+  {k:'q5',t:'choice',ti:'Что тебя привело?',           sb:'Главная цель на ужине',             opts:['👥 Новые друзья','💼 Нетворкинг','🎉 Провести вечер','💫 Романтика']},
+  {k:'q6',t:'choice',ti:'Как ты в компании?',          sb:'Честный ответ помогает подобрать группу',opts:['🌙 Интроверт — слушаю больше','☀️ Экстраверт — легко завожу разговор','⚖️ Амбиверт — по настроению','🔥 Душа компании']},
+  {k:'q7',t:'tags',  ti:'Твои интересы',               sb:'Выбери 3–6 тем — по ним подберём компанию',opts:['🎬 Кино','🎵 Музыка','✈️ Путешествия','💻 Технологии','🍕 Еда','📚 Книги','🏃 Спорт','🎨 Искусство','🎮 Игры','💼 Бизнес','🧘 ЗОЖ','🌿 Природа','📷 Фото','🔬 Наука']},
+  {k:'q8',t:'text',  ti:'Последнее что впечатлило?',   sb:'Книга, фильм, подкаст — что угодно',pl:'Название или описание'},
+  {k:'q9',t:'area',  ti:'Чем ты гордишься?',           sb:'Любое достижение — большое или маленькое',pl:'Расскажи...'},
+  {k:'q10',t:'area', ti:'Что хочешь изменить?',        sb:'В этом году — в себе, работе, жизни',pl:'Можно коротко'},
+  {k:'q11',t:'text', ti:'Место мечты?',                sb:'Куда хочешь попасть',              pl:'Город, страна, место'},
+  {k:'q12',t:'choice',ti:'Ты за столом с новыми людьми',sb:'Как обычно себя ведёшь?',         opts:['🎧 Слушаю больше','🗣 Говорю много','🌊 По настроению','🤝 От компании']},
+  {k:'q13',t:'choice',ti:'Пищевые ограничения?',       sb:'Нужно для выбора ресторана',       opts:['✅ Нет ограничений','🥦 Вегетарианец','🌱 Веган','☪️ Халяль','✏️ Другое']},
+  {k:'q14',t:'text', ti:'Твой Telegram?',               sb:'Для связи с командой',             pl:'@username'},
+  {k:'q15',t:'area', ti:'Одно предложение о себе',     sb:'Что важно знать другим участникам?',pl:'Например: люблю котиков и путешествия автостопом...'},
+];
+const TOTAL=QS.length;
+let ans={},cur=0,tagSel=[],editMode=false;
+
+function loadSaved(){
+  try{const s=localStorage.getItem('tg_profile');if(s){ans=JSON.parse(s);return true;}}catch(e){}
+  return false;
+}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function getTV(o){return o.replace(/[\p{Emoji}\s]+/gu,'').trim().toLowerCase().split(/\s/)[0]||o.toLowerCase();}
+
+function renderQ(i){
+  const q=QS[i];
+  let h=`<div class="q-title">${q.ti}</div><div class="q-sub">${q.sb}</div>`;
+  if(q.t==='text'){
+    h+=`<input class="inp" id="qi" placeholder="${esc(q.pl||'')}" value="${esc(ans[q.k]||'')}" autocomplete="off">`;
+  } else if(q.t==='area'){
+    h+=`<textarea class="inp" id="qi" placeholder="${esc(q.pl||'')}" rows="4">${esc(ans[q.k]||'')}</textarea>`;
+  } else if(q.t==='choice'){
+    h+=`<div class="chs">`;
+    (q.opts||[]).forEach(o=>{
+      const s=ans[q.k]===o?' sel':'';
+      h+=`<button class="ch${s}" onclick="pickCh('${o.replace(/'/g,"&#39;")}')">${o}</button>`;
+    });
+    h+=`</div>`;
+  } else if(q.t==='tags'){
+    tagSel=ans[q.k]?(ans[q.k].split(',').map(s=>s.trim()).filter(Boolean)):[];
+    h+=`<div class="tgs">`;
+    (q.opts||[]).forEach(o=>{
+      const v=getTV(o);
+      const s=tagSel.includes(v)?' sel':'';
+      h+=`<div class="tg${s}" data-v="${v}" onclick="togTg(this)">${o}</div>`;
+    });
+    h+=`</div><div class="tg-hint" id="tgh">Выбрано: ${tagSel.length} из 6</div>`;
+  }
+  document.getElementById('q-body').innerHTML=h;
+  document.getElementById('q-pf').style.width=((i+1)/TOTAL*100)+'%';
+  document.getElementById('q-sl').textContent=`${i+1} / ${TOTAL}`;
+  const bk=document.getElementById('q-bk');
+  bk.style.display=i>0?'flex':'none';
+  const nxt=document.getElementById('q-nxt');
+  nxt.textContent=editMode?'Сохранить ✓':(i===TOTAL-1?'Отправить анкету ✓':'Дальше →');
+  nxt.disabled=!isVal(i);
+  if(q.t==='text'||q.t==='area'){
+    setTimeout(()=>{
+      const el=document.getElementById('qi');
+      if(el)el.addEventListener('input',()=>{document.getElementById('q-nxt').disabled=!el.value.trim();});
+    },30);
+  }
+}
+
+function isVal(i){
+  const q=QS[i];
+  if(q.t==='tags') return tagSel.length>=3;
+  if(q.t==='choice') return !!ans[q.k];
+  return (ans[q.k]||'').trim().length>0;
+}
+function pickCh(v){
+  const q=QS[cur];ans[q.k]=v;
+  document.querySelectorAll('.ch').forEach(c=>c.classList.toggle('sel',c.textContent.trim()===v));
+  document.getElementById('q-nxt').disabled=false;
+}
+function togTg(el){
+  const v=el.dataset.v;
+  if(el.classList.contains('sel')){el.classList.remove('sel');tagSel=tagSel.filter(x=>x!==v);}
+  else{if(tagSel.length>=6)return;el.classList.add('sel');tagSel.push(v);}
+  const h=document.getElementById('tgh');if(h)h.textContent=`Выбрано: ${tagSel.length} из 6`;
+  document.getElementById('q-nxt').disabled=tagSel.length<3;
+}
+function saveCur(){
+  const q=QS[cur];
+  if(q.t==='text'||q.t==='area'){const el=document.getElementById('qi');if(el)ans[q.k]=el.value.trim();}
+  else if(q.t==='tags'){ans[q.k]=tagSel.join(', ');}
+}
+
+// Attach button handlers after DOM ready
+document.getElementById('q-nxt').onclick=nextQ;
+document.getElementById('q-bk').onclick=prevQ;
+
+function nextQ(){
+  saveCur();
+  if(editMode){saveEdit();return;}
+  if(cur===TOTAL-1){submitQ();return;}
+  cur++;renderQ(cur);
+  document.getElementById('q-body').scrollTop=0;
+}
+function prevQ(){saveCur();if(cur>0){cur--;renderQ(cur);}}
+
+function editSingle(k){
+  editMode=true;
+  cur=QS.findIndex(q=>q.k===k);
+  if(cur<0){cur=0;}
+  document.getElementById('ans-wrap').style.display='none';
+  document.getElementById('quiz-wrap').style.display='block';
+  renderQ(cur);
+}
+function saveEdit(){
+  saveCur();editMode=false;
+  localStorage.setItem('tg_profile',JSON.stringify(ans));
+  if(tg?.sendData)tg.sendData(JSON.stringify({...ans,_action:'edit'}));
+  showAnswers();
+  showToast('Сохранено ✓');
+}
+function submitQ(){
+  const btn=document.getElementById('q-nxt');
+  btn.textContent='Отправляем...';btn.disabled=true;
+  const p=JSON.stringify(ans);
+  if(tg?.sendData)tg.sendData(p);
+  localStorage.setItem('tg_profile',p);
+  localStorage.setItem('tg_status','pending');
+  setTimeout(()=>{
+    document.getElementById('quiz-wrap').style.display='none';
+    document.getElementById('suc-wrap').style.display='flex';
+    updateDinner();updateProfile();
+  },700);
+}
+function showAnswers(){
+  document.getElementById('quiz-wrap').style.display='none';
+  document.getElementById('suc-wrap').style.display='none';
+  document.getElementById('ans-wrap').style.display='block';
+  const lbls={q1:'Имя',q2:'Возраст',q3:'Откуда',q4:'Работа',q5:'Цель',q6:'Темперамент',q7:'Интересы',q8:'Впечатлило',q9:'Гордость',q10:'Хочу изменить',q11:'Место мечты',q12:'За столом',q13:'Питание',q14:'Telegram',q15:'О себе'};
+  document.getElementById('ans-list').innerHTML=QS.map(q=>`
+    <div class="ans-item">
+      <div class="ans-q">${lbls[q.k]||q.k}</div>
+      <div class="ans-row">
+        <div class="ans-val">${esc(ans[q.k]||'—')}</div>
+        <button class="ans-edit" onclick="editSingle('${q.k}')">✎ Изменить</button>
+      </div>
+    </div>`).join('');
+}
+function startFresh(){
+  ans={};cur=0;tagSel=[];editMode=false;
+  localStorage.removeItem('tg_profile');localStorage.removeItem('tg_status');
+  document.getElementById('ans-wrap').style.display='none';
+  document.getElementById('suc-wrap').style.display='none';
+  document.getElementById('quiz-wrap').style.display='block';
+  renderQ(0);
+}
+
+// DINNER
+function updateDinner(){
+  const st=localStorage.getItem('tg_status')||'none';
+  const badge=document.getElementById('st-badge');
+  badge.className='st-badge '+(st==='none'?'pending':st);
+  const m={
+    pending:{txt:'На проверке',title:'Анкета отправлена',sub:'Модератор проверит в течение 1–2 часов'},
+    approved:{txt:'Одобрен',title:`Привет, ${ans.q1||''}!`,sub:'Запишись на ближайший ужин 👇'},
+    registered:{txt:'Записан',title:'🎉 Ты в игре!',sub:'Ждём тебя в среду в 19:30'},
+    rejected:{txt:'Отклонён',title:'Анкета не прошла',sub:'Напиши @togetherty_support'},
+    none:{txt:'Нет анкеты',title:'Заполни анкету',sub:'Ответь на вопросы в разделе Анкета'},
+  };
+  const d=m[st]||m.none;
+  document.getElementById('st-txt').textContent=d.txt;
+  document.getElementById('st-title').textContent=d.title;
+  document.getElementById('st-sub').textContent=d.sub;
+  document.getElementById('reg-wrap').style.display=st==='approved'?'block':'none';
+  const isEmpty=st==='none';
+  document.getElementById('uzhin-empty').style.display=isEmpty?'flex':'none';
+  document.getElementById('uzhin-main').style.display=isEmpty?'none':'block';
+  const w=nextWed(),M=['','янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'];
+  document.getElementById('ir-date').textContent=`Среда, ${w.getDate()} ${M[w.getMonth()+1]}`;
+  startTimer();
+}
+function registerDinner(){
+  localStorage.setItem('tg_status','registered');
+  if(tg?.sendData)tg.sendData(JSON.stringify({_action:'register'}));
+  updateDinner();updateProfile();
+  showToast('Записан на ужин! 🍽');
+}
+
+// PROFILE
+function updateProfile(){
+  const name=tgU.first_name||ans.q1||'Гость';
+  const uname=tgU.username?'@'+tgU.username:(ans.q14||'@—');
+  document.getElementById('p-name').textContent=name;
+  document.getElementById('p-uname').textContent=uname;
+  document.getElementById('p-av-l').textContent=name[0]?.toUpperCase()||'?';
+  if(tgU.photo_url){
+    document.getElementById('p-av').innerHTML=`<img src="${tgU.photo_url}" alt="">`;
+  }
+  const st=localStorage.getItem('tg_status')||'none';
+  const sm={pending:'⏳ На проверке',approved:'✅ Одобрен',registered:'🍽 Записан',rejected:'❌ Отклонён',none:'📋 Нет анкеты'};
+  document.getElementById('p-badge-txt').textContent=sm[st]||'—';
+  const pb=document.getElementById('p-badge');
+  pb.className='st-badge '+(st==='none'?'pending':st);
+  const ints=(ans.q7||'').split(',').map(s=>s.trim()).filter(Boolean);
+  document.getElementById('p-s-int').textContent=ints.length;
+  document.getElementById('p-s-city').textContent=(ans.q3||'—').split(/[\s,]/)[0].slice(0,6);
+  document.getElementById('p-s-uzhin').textContent=st==='registered'?'1':'0';
+  const ie=document.getElementById('p-int');
+  ie.innerHTML=ints.length?ints.map(i=>`<div class="tg" style="pointer-events:none">${i}</div>`).join(''):'<span style="font-size:13px;color:var(--m)">Не заполнено</span>';
+}
+
+// DINNER QUESTIONS
+const DQ=[
+  {cat:'Знакомство',q:'Какое место в мире ты мечтаешь посетить и почему ещё не был там?'},
+  {cat:'Мечты',q:'Если бы ты мог освоить любой навык за одну ночь — что бы выбрал?'},
+  {cat:'Жизнь',q:'Что ты делал последний раз впервые в жизни?'},
+  {cat:'Жизнь',q:'Какой совет ты бы дал себе 5 лет назад?'},
+  {cat:'Мечты',q:'Что тебя по-настоящему вдохновляет прямо сейчас?'},
+  {cat:'Жизнь',q:'Если бы ты не работал там, где работаешь — чем бы занимался?'},
+  {cat:'Глубокое',q:'Какой фильм или книга изменили твой взгляд на жизнь?'},
+  {cat:'Знакомство',q:'Как выглядит твой идеальный вечер?'},
+  {cat:'Глубокое',q:'О чём ты чаще всего думаешь перед сном?'},
+  {cat:'Мечты',q:'Если бы ты запустил свой проект — что бы это было?'},
+  {cat:'Юмор',q:'Какой самый странный страх у тебя есть?'},
+  {cat:'Знакомство',q:'Что три твоих друга сказали бы о тебе незнакомцу?'},
+  {cat:'Глубокое',q:'Что ты считаешь своим главным достижением?'},
+  {cat:'Юмор',q:'Какой суперсилой ты бы хотел обладать и как бы злоупотреблял ей?'},
+  {cat:'Жизнь',q:'Что сделало тебя тем, кто ты есть сейчас?'},
+  {cat:'Мечты',q:'Если бы ты мог пообедать с любым человеком в истории — кто это?'},
+  {cat:'Юмор',q:'Какую самую нелепую работу ты бы взял за миллион рублей в день?'},
+  {cat:'Глубокое',q:'Что для тебя значит настоящая дружба?'},
+];
+let qsI=0,qsF=[...DQ];
+
+function openQs(i){
+  qsI=i||0;
+  document.getElementById('qs-ov').classList.add('open');
+  renderQsCard();renderQsDots();
+}
+function closeQs(){document.getElementById('qs-ov').classList.remove('open');}
+function renderQsCard(){
+  const q=qsF[qsI];if(!q)return;
+  document.getElementById('qs-cat').textContent=q.cat;
+  document.getElementById('qs-q').textContent=q.q;
+  document.getElementById('qs-num').textContent=String(qsI+1).padStart(2,'0');
+  document.getElementById('fq-cat').textContent=q.cat;
+  document.getElementById('fq-q').textContent=q.q;
+  document.getElementById('fq-num').textContent=String(qsI+1).padStart(2,'0');
+}
+function renderQsDots(){
+  document.getElementById('qs-dots').innerHTML=qsF.map((_,i)=>`<div class="qs-dot${i===qsI?' active':''}" onclick="goQs(${i})"></div>`).join('');
+}
+function nextQs(){qsI=(qsI+1)%qsF.length;renderQsCard();renderQsDots();}
+function prevQs(){qsI=(qsI-1+qsF.length)%qsF.length;renderQsCard();renderQsDots();}
+function goQs(i){qsI=i;renderQsCard();renderQsDots();}
+
+// Swipe
+let swX=0;
+document.getElementById('qs-ov').addEventListener('touchstart',e=>{swX=e.touches[0].clientX;},{passive:true});
+document.getElementById('qs-ov').addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX-swX;if(Math.abs(dx)>50){dx<0?nextQs():prevQs();}});
+
+function filterCat(cat,el){
+  document.querySelectorAll('.cat-pill').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  qsF=cat==='all'?[...DQ]:DQ.filter(q=>q.cat===cat);
+  qsI=0;renderQsCard();renderQsDots();renderQList();
+}
+function renderQList(){
+  document.getElementById('q-list').innerHTML=qsF.map((q)=>`
+    <div class="ql-item" onclick="openQs(${DQ.indexOf(q)})">
+      <div class="ql-cat">${q.cat}</div>
+      <div class="ql-text">${q.q}</div>
+    </div>`).join('');
+}
+
+// TIMER
+function nextWed(){const d=new Date(),day=d.getDay(),diff=(3-day+7)%7||7;d.setDate(d.getDate()+diff);d.setHours(19,30,0,0);return d;}
+function startTimer(){
+  function tick(){const diff=nextWed()-new Date();if(diff<=0)return;
+    document.getElementById('td').textContent=String(Math.floor(diff/86400000)).padStart(2,'0');
+    document.getElementById('th').textContent=String(Math.floor((diff%86400000)/3600000)).padStart(2,'0');
+    document.getElementById('tm').textContent=String(Math.floor((diff%3600000)/60000)).padStart(2,'0');}
+  tick();clearInterval(window._ti);window._ti=setInterval(tick,30000);
+}
+
+// NAV
+function goTab(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.ni-btn').forEach(n=>n.classList.remove('active'));
+  const m={'tab-anketa':'nav-anketa','tab-uzhin':'nav-uzhin','tab-voprosy':'nav-voprosy','tab-profil':'nav-profil'};
+  const el=document.getElementById(m[id]);if(el)el.classList.add('active');
+}
+
+// TOAST
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.classList.add('show');
+  clearTimeout(window._tt);
+  window._tt=setTimeout(()=>{t.classList.remove('show');},2500);
+}
+
+// INIT
+const hasSaved=loadSaved();
+if(hasSaved){
+  const st=localStorage.getItem('tg_status')||'';
+  if(st){showAnswers();}else{renderQ(0);}
+  updateDinner();updateProfile();
+}else{renderQ(0);}
+renderQList();
+</script>
+</body>
+</html>
