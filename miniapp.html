@@ -650,8 +650,27 @@ function showToast(msg){
   window._tt=setTimeout(()=>{t.classList.remove('show');},2500);
 }
 
-// INIT
-const hasSaved=loadSaved();
+// INIT — загружаем данные из URL (переданные ботом) или localStorage
+function loadFromUrl(){
+  try {
+    const hash = window.location.hash;
+    if(!hash) return false;
+    const dataMatch = hash.match(/[#&]data=([^&]+)/);
+    if(!dataMatch) return false;
+    const decoded = JSON.parse(atob(dataMatch[1].replace(/-/g,'+').replace(/_/g,'/')));
+    if(decoded.profile && Object.keys(decoded.profile).length > 0){
+      ans = decoded.profile;
+      // Сохраняем в localStorage для следующих открытий
+      localStorage.setItem('tg_profile', JSON.stringify(ans));
+      if(decoded.status) localStorage.setItem('tg_status', decoded.status);
+      return true;
+    }
+  } catch(e){ console.log('URL parse error:', e); }
+  return false;
+}
+
+const loadedFromUrl = loadFromUrl();
+const hasSaved = loadedFromUrl || loadSaved();
 if(hasSaved){
   const st=localStorage.getItem('tg_status')||'';
   if(st){showAnswers();}else{renderQ(0);}
