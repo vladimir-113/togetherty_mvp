@@ -650,6 +650,37 @@ function showToast(msg){
   window._tt=setTimeout(()=>{t.classList.remove('show');},2500);
 }
 
+// API
+const API_URL = 'https://amvera-vladimir13-run-togetherty-bot.amvera.io';
+const tgUid = tg?.initDataUnsafe?.user?.id || null;
+const tgInitData = tg?.initData || '';
+
+async function loadFromApi(){
+  if(!tgUid) return false;
+  try{
+    const r = await fetch(`${API_URL}/api/profile/${tgUid}`);
+    if(!r.ok) return false;
+    const data = await r.json();
+    if(data.exists && data.profile && Object.keys(data.profile).length > 0){
+      ans = data.profile;
+      localStorage.setItem('tg_profile', JSON.stringify(ans));
+      if(data.status) localStorage.setItem('tg_status', data.status);
+      return true;
+    }
+  }catch(e){ console.log('API load error:',e); }
+  return false;
+}
+
+async function saveToApi(profile, status){
+  try{
+    await fetch(`${API_URL}/api/profile`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({init_data:tgInitData, profile:{...profile,_uid:tgUid}, status:status||'pending'})
+    });
+  }catch(e){ console.log('API save error:',e); }
+}
+
 // INIT — загружаем данные из URL (переданные ботом) или localStorage
 function loadFromUrl(){
   try {
@@ -660,7 +691,6 @@ function loadFromUrl(){
     const decoded = JSON.parse(atob(dataMatch[1].replace(/-/g,'+').replace(/_/g,'/')));
     if(decoded.profile && Object.keys(decoded.profile).length > 0){
       ans = decoded.profile;
-      // Сохраняем в localStorage для следующих открытий
       localStorage.setItem('tg_profile', JSON.stringify(ans));
       if(decoded.status) localStorage.setItem('tg_status', decoded.status);
       return true;
@@ -669,14 +699,39 @@ function loadFromUrl(){
   return false;
 }
 
-const loadedFromUrl = loadFromUrl();
-const hasSaved = loadedFromUrl || loadSaved();
-if(hasSaved){
-  const st=localStorage.getItem('tg_status')||'';
-  if(st){showAnswers();}else{renderQ(0);}
-  updateDinner();updateProfile();
-}else{renderQ(0);}
-renderQList();
+// Запуск — сначала пробуем API, потом URL, потом localStorage
+async function init(){
+  const fromApi = await loadFromApi();
+  const fromUrl = !fromApi && loadFromUrl();
+  const fromLocal = !fromApi && !fromUrl && loadSaved();
+  const hasSaved = fromApi || fromUrl || fromLocal;
+  if(hasSaved){
+    const st=localStorage.getItem('tg_status')||'';
+    if(st){showAnswers();}else{renderQ(0);}
+    updateDinner();updateProfile();
+  }else{renderQ(0);}
+  renderQList();
+}
+
+// Патчим submitQ чтобы сохранял в API
+const _origSubmitQ = submitQ;
+function submitQ(){
+  saveCur();
+  const btn=document.getElementById('q-nxt');
+  btn.textContent='Отправляем...';btn.disabled=true;
+  const p=JSON.stringify(ans);
+  if(tg?.sendData)tg.sendData(p);
+  localStorage.setItem('tg_profile',p);
+  localStorage.setItem('tg_status','pending');
+  saveToApi(ans,'pending'); // сохраняем в базу
+  setTimeout(()=>{
+    document.getElementById('quiz-wrap').style.display='none';
+    document.getElementById('suc-wrap').style.display='flex';
+    updateDinner();updateProfile();
+  },700);
+}
+
+init();
 </script>
 </body>
 </html>
