@@ -650,85 +650,103 @@ function showToast(msg){
   window._tt=setTimeout(()=>{t.classList.remove('show');},2500);
 }
 
-// API
+// ── API ──────────────────────────────────────────────────────────────────────
 const API_URL = 'https://amvera-vladimir13-run-togetherty-bot.amvera.io';
 const tgUid = tg?.initDataUnsafe?.user?.id || null;
 const tgInitData = tg?.initData || '';
+const tgUser = tg?.initDataUnsafe?.user || {};
 
-async function loadFromApi(){
-  if(!tgUid) return false;
+async function apiGet(uid){
   try{
-    const r = await fetch(`${API_URL}/api/profile/${tgUid}`);
-    if(!r.ok) return false;
-    const data = await r.json();
-    if(data.exists && data.profile && Object.keys(data.profile).length > 0){
-      ans = data.profile;
-      localStorage.setItem('tg_profile', JSON.stringify(ans));
-      if(data.status) localStorage.setItem('tg_status', data.status);
-      return true;
-    }
-  }catch(e){ console.log('API load error:',e); }
-  return false;
+    const r = await fetch(`${API_URL}/api/profile/${uid}`);
+    if(!r.ok) return null;
+    return await r.json();
+  }catch(e){ return null; }
 }
 
-async function saveToApi(profile, status){
+async function apiSave(profile, status){
   try{
-    await fetch(`${API_URL}/api/profile`, {
+    const r = await fetch(`${API_URL}/api/profile`,{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({init_data:tgInitData, profile:{...profile,_uid:tgUid}, status:status||'pending'})
+      body:JSON.stringify({
+        init_data: tgInitData,
+        profile: {...profile, _uid: tgUid},
+        status: status||'pending',
+      }),
     });
-  }catch(e){ console.log('API save error:',e); }
+    const d = await r.json();
+    return d.ok;
+  }catch(e){ return false; }
 }
 
-// INIT — загружаем данные из URL (переданные ботом) или localStorage
-function loadFromUrl(){
-  try {
-    const hash = window.location.hash;
-    if(!hash) return false;
-    const dataMatch = hash.match(/[#&]data=([^&]+)/);
-    if(!dataMatch) return false;
-    const decoded = JSON.parse(atob(dataMatch[1].replace(/-/g,'+').replace(/_/g,'/')));
-    if(decoded.profile && Object.keys(decoded.profile).length > 0){
-      ans = decoded.profile;
-      localStorage.setItem('tg_profile', JSON.stringify(ans));
-      if(decoded.status) localStorage.setItem('tg_status', decoded.status);
-      return true;
-    }
-  } catch(e){ console.log('URL parse error:', e); }
-  return false;
+async function apiUpdateStatus(status){
+  try{
+    await fetch(`${API_URL}/api/status`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({init_data:tgInitData, status}),
+    });
+  }catch(e){}
 }
 
-// Запуск — сначала пробуем API, потом URL, потом localStorage
-async function init(){
-  const fromApi = await loadFromApi();
-  const fromUrl = !fromApi && loadFromUrl();
-  const fromLocal = !fromApi && !fromUrl && loadSaved();
-  const hasSaved = fromApi || fromUrl || fromLocal;
-  if(hasSaved){
-    const st=localStorage.getItem('tg_status')||'';
-    if(st){showAnswers();}else{renderQ(0);}
-    updateDinner();updateProfile();
-  }else{renderQ(0);}
-  renderQList();
-}
-
-// Патчим submitQ чтобы сохранял в API
-const _origSubmitQ = submitQ;
+// ── SUBMIT — сохраняет анкету в API и localStorage ───────────────────────────
 function submitQ(){
   saveCur();
   const btn=document.getElementById('q-nxt');
   btn.textContent='Отправляем...';btn.disabled=true;
-  const p=JSON.stringify(ans);
-  if(tg?.sendData)tg.sendData(p);
-  localStorage.setItem('tg_profile',p);
+  localStorage.setItem('tg_profile',JSON.stringify(ans));
   localStorage.setItem('tg_status','pending');
-  saveToApi(ans,'pending'); // сохраняем в базу
+  // Сохраняем в API
+  apiSave(ans,'pending').then(ok=>{
+    if(ok) console.log('Saved to API');
+  });
   setTimeout(()=>{
     document.getElementById('quiz-wrap').style.display='none';
     document.getElementById('suc-wrap').style.display='flex';
     updateDinner();updateProfile();
   },700);
+}
+
+// ── INIT ─────────────────────────────────────────────────────────────────────
+async function init(){
+  let loaded = false;
+
+  // 1. Загружаем из API (приоритет — актуальные данные)
+  if(tgUid){
+    const data = await apiGet(tgUid);
+    if(data && data.exists && Object.keys(data.profile).length > 0){
+      ans = data.profile;
+      localStorage.setItem('tg_profile', JSON.stringify(ans));
+      localStorage.setItem('tg_status', data.status||'none');
+      loaded = true;
+    }
+  }
+
+  // 2. Fallback: localStorage
+  if(!loaded){
+    const saved = localStorage.getItem('tg_profile');
+    if(saved){
+      try{
+        const p = JSON.parse(saved);
+        if(Object.keys(p).length > 0){ ans = p; loaded = true; }
+      }catch(e){}
+    }
+  }
+
+  // 3. Если есть в localStorage но не в API — синхронизируем
+  if(loaded && tgUid && !loaded){
+    apiSave(ans, localStorage.getItem('tg_status')||'pending');
+  }
+
+  if(loaded && Object.keys(ans).length > 0){
+    const st = localStorage.getItem('tg_status')||'';
+    if(st && st !== 'none'){ showAnswers(); }else{ renderQ(0); }
+    updateDinner(); updateProfile();
+  } else {
+    renderQ(0);
+  }
+  renderQList();
 }
 
 init();
