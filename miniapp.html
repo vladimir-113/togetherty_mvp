@@ -656,17 +656,24 @@ const tgUid = tg?.initDataUnsafe?.user?.id || null;
 const tgInitData = tg?.initData || '';
 const tgUser = tg?.initDataUnsafe?.user || {};
 
+function fetchTimeout(url, opts={}, ms=4000){
+  const ctrl = new AbortController();
+  const tid = setTimeout(()=>ctrl.abort(), ms);
+  return fetch(url,{...opts, signal: ctrl.signal})
+    .finally(()=>clearTimeout(tid));
+}
+
 async function apiGet(uid){
   try{
-    const r = await fetch(`${API_URL}/api/profile/${uid}`);
+    const r = await fetchTimeout(`${API_URL}/api/profile/${uid}`, {}, 4000);
     if(!r.ok) return null;
     return await r.json();
-  }catch(e){ return null; }
+  }catch(e){ console.warn('apiGet failed:', e.message); return null; }
 }
 
 async function apiSave(profile, status){
   try{
-    const r = await fetch(`${API_URL}/api/profile`,{
+    const r = await fetchTimeout(`${API_URL}/api/profile`,{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
@@ -674,20 +681,20 @@ async function apiSave(profile, status){
         profile: {...profile, _uid: tgUid},
         status: status||'pending',
       }),
-    });
+    }, 6000);
     const d = await r.json();
     return d.ok;
-  }catch(e){ return false; }
+  }catch(e){ console.warn('apiSave failed:', e.message); return false; }
 }
 
 async function apiUpdateStatus(status){
   try{
-    await fetch(`${API_URL}/api/status`,{
+    await fetchTimeout(`${API_URL}/api/status`,{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({init_data:tgInitData, status}),
-    });
-  }catch(e){}
+    }, 4000);
+  }catch(e){ console.warn('apiUpdateStatus failed:', e.message); }
 }
 
 // ── SUBMIT — сохраняет анкету в API и localStorage ───────────────────────────
@@ -711,8 +718,9 @@ function submitQ(){
 // ── INIT ─────────────────────────────────────────────────────────────────────
 async function init(){
   let loaded = false;
+  let loadedFromApi = false;
 
-  // 1. Загружаем из API (приоритет — актуальные данные)
+  // 1. Пытаемся загрузить из API (с таймаутом 4 сек)
   if(tgUid){
     const data = await apiGet(tgUid);
     if(data && data.exists && Object.keys(data.profile).length > 0){
@@ -720,10 +728,11 @@ async function init(){
       localStorage.setItem('tg_profile', JSON.stringify(ans));
       localStorage.setItem('tg_status', data.status||'none');
       loaded = true;
+      loadedFromApi = true;
     }
   }
 
-  // 2. Fallback: localStorage
+  // 2. Fallback: localStorage (если API не отдал данных)
   if(!loaded){
     const saved = localStorage.getItem('tg_profile');
     if(saved){
@@ -734,8 +743,8 @@ async function init(){
     }
   }
 
-  // 3. Если есть в localStorage но не в API — синхронизируем
-  if(loaded && tgUid && !loaded){
+  // 3. Если данные есть локально, но не в API — синхронизируем (фоном)
+  if(loaded && !loadedFromApi && tgUid){
     apiSave(ans, localStorage.getItem('tg_status')||'pending');
   }
 
