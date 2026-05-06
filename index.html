@@ -6,6 +6,25 @@
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<!-- Yandex.Metrika counter -->
+<script type="text/javascript">
+   (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+   m[i].l=1*new Date();
+   for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+   k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
+   (window, document, "script", "https://mc.yandex.ru/metrika/tag.js?id=109088471", "ym");
+
+   ym(109088471, "init", {
+        ssr:true,
+        webvisor:true,
+        clickmap:true,
+        ecommerce:"dataLayer",
+        accurateTrackBounce:true,
+        trackLinks:true
+   });
+</script>
+<noscript><div><img src="https://mc.yandex.ru/watch/109088471" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+<!-- /Yandex.Metrika counter -->
 <meta name="description" content="Togetherty — ужины с незнакомцами в Рязани. Шесть человек, один стол, один вечер.">
 <meta name="theme-color" content="#f6f1e8">
 <title>Togetherty — ужины с теми, кого ещё не знал</title>
@@ -740,8 +759,9 @@ footer {
     </p>
 
     <div class="hero-actions fade-up d3">
-        <a href="https://t.me/togetherty_bot" target="_blank" rel="noopener" class="btn btn-primary">
-            Заполнить анкету
+        <a href="https://t.me/togetherty_bot" target="_blank" rel="noopener" class="btn btn-primary"
+           onclick="ym(109088471,'reachGoal','open_bot')">
+        Заполнить анкету
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                 <path d="M1 7H13M13 7L8 2M13 7L8 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
