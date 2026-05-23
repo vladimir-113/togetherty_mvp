@@ -77,11 +77,13 @@ textarea.inp{resize:none;line-height:1.6;min-height:90px;}
 .st-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:100px;margin-bottom:12px;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;position:relative;}
 .st-badge.pending{background:rgba(240,176,64,.15);color:var(--amber);border:1px solid rgba(240,176,64,.25);}
 .st-badge.approved{background:rgba(76,217,122,.15);color:var(--green);border:1px solid rgba(76,217,122,.25);}
+.st-badge.requested{background:rgba(100,160,255,.15);color:#4a90d9;border:1px solid rgba(100,160,255,.3);}
 .st-badge.registered{background:rgba(244,98,42,.2);color:var(--ol);border:1px solid rgba(244,98,42,.35);}
 .st-badge.rejected{background:rgba(240,80,80,.15);color:var(--red);border:1px solid rgba(240,80,80,.2);}
 .st-pulse{width:7px;height:7px;border-radius:50%;animation:pulse 2s infinite;}
 .st-badge.pending .st-pulse{background:var(--amber);}
 .st-badge.approved .st-pulse{background:var(--green);}
+.st-badge.requested .st-pulse{background:#4a90d9;}
 .st-badge.registered .st-pulse{background:var(--ol);}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 .st-title{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:700;line-height:1.25;margin-bottom:6px;position:relative;}
@@ -233,14 +235,15 @@ textarea.inp{resize:none;line-height:1.6;min-height:90px;}
         </div>
         <div class="sec-hd">Детали ужина</div>
         <div class="info-card gl">
-          <div class="ir"><span class="ir-ic">📅</span><span class="ir-lb">Дата</span><span class="ir-vl" id="ir-date">Среда</span></div>
-          <div class="ir"><span class="ir-ic">🕢</span><span class="ir-lb">Время</span><span class="ir-vl">19:30</span></div>
+          <div class="ir"><span class="ir-ic">📅</span><span class="ir-lb">Дата</span><span class="ir-vl" id="ir-date">—</span></div>
+          <div class="ir"><span class="ir-ic">🕢</span><span class="ir-lb">Время</span><span class="ir-vl" id="ir-time">—</span></div>
           <div class="ir"><span class="ir-ic">📍</span><span class="ir-lb">Ресторан</span><span class="ir-vl" style="color:var(--m);font-size:12px">Пришлём за 24 часа</span></div>
           <div class="ir"><span class="ir-ic">👥</span><span class="ir-lb">Участников</span><span class="ir-vl">6 человек</span></div>
           <div class="ir"><span class="ir-ic">💰</span><span class="ir-lb">Оргсбор</span><span class="ir-vl" id="ir-price" style="color:var(--ol)">Бесплатно 🎁</span></div>
         </div>
         <div id="reg-wrap" style="padding:0 16px 10px">
-          <button class="btn btn-o" onclick="registerDinner()">🍽 Записаться на ужин</button>
+          <button class="btn btn-o" id="btn-request" onclick="requestDinner()">🙋 Хочу на ужин</button>
+          <button class="btn btn-g" id="btn-cancel-req" onclick="cancelRequest()" style="display:none;margin-top:8px">❌ Отменить заявку</button>
         </div>
         <div style="padding:0 16px 20px">
           <button class="btn btn-g" onclick="goTab('tab-anketa')" style="font-size:13px">✏️ Изменить анкету</button>
@@ -513,29 +516,82 @@ function updateDinner(){
   const badge=document.getElementById('st-badge');
   badge.className='st-badge '+(st==='none'?'pending':st);
   const m={
-    pending:{txt:'На проверке',title:'Анкета отправлена',sub:'Модератор проверит в течение 1–2 часов'},
-    approved:{txt:'Одобрен',title:`Привет, ${ans.q1||''}!`,sub:'Запишись на ближайший ужин 👇'},
-    registered:{txt:'Записан',title:'🎉 Ты в игре!',sub:'Ждём тебя в среду в 19:30'},
-    rejected:{txt:'Отклонён',title:'Анкета не прошла',sub:'Напиши @togetherty_support'},
-    none:{txt:'Нет анкеты',title:'Заполни анкету',sub:'Ответь на вопросы в разделе Анкета'},
+    pending:   {txt:'На проверке', title:'Анкета отправлена',          sub:'Модератор проверит в течение 1–2 часов'},
+    approved:  {txt:'Одобрен',     title:`Привет, ${ans.q1||''}!`,     sub:'Подай заявку на ближайший ужин 👇'},
+    requested: {txt:'Заявка подана',title:'🙋 Ждём подтверждения',     sub:'Подберём стол и пришлём детали'},
+    registered:{txt:'Записан',     title:'🎉 Ты в игре!',              sub:'Детали ужина придут за 24 часа'},
+    rejected:  {txt:'Отклонён',    title:'Анкета не прошла',           sub:'Напиши @togetherty_support'},
+    none:      {txt:'Нет анкеты',  title:'Заполни анкету',             sub:'Ответь на вопросы в разделе Анкета'},
   };
   const d=m[st]||m.none;
   document.getElementById('st-txt').textContent=d.txt;
   document.getElementById('st-title').textContent=d.title;
   document.getElementById('st-sub').textContent=d.sub;
-  document.getElementById('reg-wrap').style.display=st==='approved'?'block':'none';
+
+  // Показываем блок кнопок только для одобренных и подавших заявку
+  const showRegWrap = (st==='approved'||st==='requested');
+  document.getElementById('reg-wrap').style.display=showRegWrap?'block':'none';
+  document.getElementById('btn-request').style.display=st==='approved'?'block':'none';
+  document.getElementById('btn-cancel-req').style.display=st==='requested'?'block':'none';
+
   const isEmpty=st==='none';
   document.getElementById('uzhin-empty').style.display=isEmpty?'flex':'none';
   document.getElementById('uzhin-main').style.display=isEmpty?'none':'block';
-  const w=nextWed(),M=['','янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'];
-  document.getElementById('ir-date').textContent=`Среда, ${w.getDate()} ${M[w.getMonth()+1]}`;
-  startTimer();
+
+  // Дата из next_dinner (настройки) или прочерк
+  const nd=localStorage.getItem('next_dinner')||'';
+  document.getElementById('ir-date').textContent=nd||'Анонсируем скоро';
+  document.getElementById('ir-time').textContent='';
 }
-function registerDinner(){
-  localStorage.setItem('tg_status','registered');
-  if(tg?.sendData)tg.sendData(JSON.stringify({_action:'register'}));
-  updateDinner();updateProfile();
-  showToast('Записан на ужин! 🍽');
+
+async function requestDinner(){
+  const btn=document.getElementById('btn-request');
+  btn.textContent='Отправляем...';btn.disabled=true;
+  try{
+    const r=await fetchTimeout(`${API_URL}/api/dinner-request`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({init_data:tgInitData, preferred_date:null}),
+    },6000);
+    const d=await r.json();
+    if(d.ok){
+      localStorage.setItem('tg_status','requested');
+      showToast('Заявка подана! Подберём стол 🙋');
+      updateDinner();updateProfile();
+    } else {
+      showToast('Ошибка — попробуй через бот');
+      btn.textContent='🙋 Хочу на ужин';btn.disabled=false;
+    }
+  }catch(e){
+    console.warn('requestDinner failed:',e.message);
+    showToast('Нет связи — попробуй через бот');
+    btn.textContent='🙋 Хочу на ужин';btn.disabled=false;
+  }
+}
+
+async function cancelRequest(){
+  const btn=document.getElementById('btn-cancel-req');
+  btn.textContent='Отменяем...';btn.disabled=true;
+  try{
+    const r=await fetchTimeout(`${API_URL}/api/dinner-request/cancel`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({init_data:tgInitData}),
+    },6000);
+    const d=await r.json();
+    if(d.ok){
+      localStorage.setItem('tg_status','approved');
+      showToast('Заявка отменена');
+      updateDinner();updateProfile();
+    } else {
+      showToast('Ошибка отмены');
+      btn.textContent='❌ Отменить заявку';btn.disabled=false;
+    }
+  }catch(e){
+    console.warn('cancelRequest failed:',e.message);
+    showToast('Нет связи — попробуй через бот');
+    btn.textContent='❌ Отменить заявку';btn.disabled=false;
+  }
 }
 
 // PROFILE
@@ -722,6 +778,22 @@ function submitQ(){
 async function init(){
   let loaded = false;
   let loadedFromApi = false;
+
+  // 0. Загружаем публичные настройки (next_dinner, цены)
+  try{
+    const rs = await fetchTimeout(`${API_URL}/api/settings`,{},3000);
+    if(rs.ok){
+      const s = await rs.json();
+      if(s.next_dinner) localStorage.setItem('next_dinner', s.next_dinner);
+      if(s.price_single){
+        const pel = document.getElementById('ir-price');
+        if(pel){
+          const st=localStorage.getItem('tg_status')||'none';
+          if(st!=='none') pel.textContent = (st==='registered'||st==='requested')?'Бесплатно 🎁':`${s.price_single} ₽`;
+        }
+      }
+    }
+  }catch(e){ console.warn('settings fetch failed:', e.message); }
 
   // 1. Пытаемся загрузить из API (с таймаутом 4 сек)
   if(tgUid){
