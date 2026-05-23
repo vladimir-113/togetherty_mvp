@@ -189,7 +189,7 @@ body {
 .s-none       { background: rgba(255,255,255,0.06); color: var(--ink-mute); }
 .s-pending    { background: rgba(232,149,64,0.15);  color: var(--amber); }
 .s-approved   { background: rgba(94,181,116,0.15);  color: var(--green); }
-.s-requested  { background: rgba(232,149,64,0.20);  color: var(--amber); border: 1px solid rgba(232,149,64,0.35); }
+.s-requested  { background: rgba(100,160,255,0.15); color: #6aacf5; border: 1px solid rgba(100,160,255,0.3); }
 .s-registered { background: rgba(232,90,58,0.15);   color: var(--terracotta); }
 .s-rejected   { background: rgba(200,71,42,0.15);   color: #d57262; }
 
@@ -528,6 +528,7 @@ body {
                 <button class="filter-btn" data-status="requested">🙋 Заявки <span class="count" data-count="requested">·</span></button>
                 <button class="filter-btn" data-status="registered">На ужине <span class="count" data-count="registered">·</span></button>
                 <button class="filter-btn" data-status="rejected">Отклонены <span class="count" data-count="rejected">·</span></button>
+                <button class="filter-btn" onclick="loadUsers()" style="margin-left:auto;opacity:0.6;">↻ Обновить</button>
             </div>
             <div id="users-list">
                 <div class="loading">Загружаем юзеров…</div>
@@ -736,6 +737,11 @@ async function loadUsers() {
         });
         document.getElementById('tab-users-badge').textContent =
             (data.counts?.pending || 0) + (data.counts?.requested || 0) || '·';
+        // Сбрасываем кеш деталей — данные могли измениться
+        document.querySelectorAll('.user-details[data-loaded]').forEach(el => {
+            delete el.dataset.loaded;
+            el.innerHTML = '';
+        });
         renderUsers();
     } catch (e) {
         document.getElementById('users-list').innerHTML = '<div class="empty">Ошибка загрузки</div>';
@@ -821,11 +827,36 @@ async function toggleUser(uid) {
             ? `<a class="btn btn-tg" href="https://t.me/${tgU.replace(/^@/, '')}" target="_blank">💬 Написать в Telegram</a>`
             : `<a class="btn btn-tg" href="tg://user?id=${uid}" target="_blank">💬 Написать</a>`;
 
+        // Кнопки зависят от текущего статуса
+        const st = u.status || 'none';
+        let actionBtns = '';
+        if (st === 'pending') {
+            actionBtns = `
+                <button class="btn btn-approve" onclick="changeStatus(${uid}, 'approved')">✅ Одобрить</button>
+                <button class="btn btn-reject"  onclick="changeStatus(${uid}, 'rejected')">❌ Отклонить</button>`;
+        } else if (st === 'approved') {
+            actionBtns = `
+                <span class="status-pill s-approved" style="margin-right:8px;">Уже одобрен</span>
+                <button class="btn btn-reject" onclick="changeStatus(${uid}, 'rejected')">❌ Отклонить</button>`;
+        } else if (st === 'requested') {
+            actionBtns = `
+                <span class="status-pill s-requested" style="margin-right:8px;">🙋 Заявка активна</span>
+                <button class="btn btn-reject" onclick="changeStatus(${uid}, 'rejected')">❌ Отклонить</button>`;
+        } else if (st === 'registered') {
+            actionBtns = `<span class="status-pill s-registered">На ужине</span>`;
+        } else if (st === 'rejected') {
+            actionBtns = `
+                <button class="btn btn-approve" onclick="changeStatus(${uid}, 'approved')">↩️ Восстановить</button>`;
+        } else {
+            actionBtns = `
+                <button class="btn btn-approve" onclick="changeStatus(${uid}, 'approved')">✅ Одобрить</button>
+                <button class="btn btn-reject"  onclick="changeStatus(${uid}, 'rejected')">❌ Отклонить</button>`;
+        }
+
         details.innerHTML = `
             <div class="qa-list">${qaHtml}</div>
             <div class="actions">
-                <button class="btn btn-approve" onclick="changeStatus(${uid}, 'approved')">✅ Одобрить</button>
-                <button class="btn btn-reject" onclick="changeStatus(${uid}, 'rejected')">❌ Отклонить</button>
+                ${actionBtns}
                 ${tgLink}
             </div>
             <div style="margin-top:12px;font-size:11px;color:var(--ink-mute);">
@@ -1111,6 +1142,7 @@ async function cancelDinner(id) {
         if (!r.ok) throw new Error();
         toast('Ужин отменён', 'success');
         loadDinners();
+        loadUsers();
     } catch {
         toast('Ошибка', 'error');
     }
